@@ -1,6 +1,7 @@
 #Talk2DAU GPT-API
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 import time
@@ -30,6 +31,17 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 
 # Initialize FastAPI app
 app = FastAPI(title="Talk2DAU API", description="AI-powered chatbot for DA-IICT queries")
+
+# Configure CORS middleware for Next.js integration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://talk2-dau.vercel.app/",  # Replace with your production domain
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 # Pydantic models for API requests and responses
 class QuestionRequest(BaseModel):
