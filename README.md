@@ -196,5 +196,7 @@ curl -X GET "http://localhost:8000/status"
 ## Notes
 
 - This bot is **not affiliated with Dhirubhai Ambani University**.
-- Misinformation may be generated — always verify answers independently.
+- Misinformation may be generated — always verify answers independently.<br>
 
+-Originally Created By:NT1906 https://github.com/NT1906/Talk2DAU.<br>
+-Open Sourced By:vaishcodescape https://github.com/vaishcodescape.
