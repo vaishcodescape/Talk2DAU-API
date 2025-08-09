@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+langchain
+langchain-community
+langchain-core
+langchain-openai
+langchain-groq
+sentence-transformers
+faiss-cpu
+pdfplumber
+pytesseract
+Pillow
+pymupdf
