@@ -20,24 +20,36 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 # Load environment variables
 load_dotenv()
 
-# Set LangSmith environment variables
-os.environ["LANGSMITH_TRACING"] = "true"
-os.environ["LANGSMITH_ENDPOINT"] = "https://api.smith.langchain.com"
-os.environ["LANGSMITH_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
-os.environ["LANGSMITH_PROJECT"] = "DAu Chatbot"
-
-# Retrieve Groq API key
+# Retrieve required API keys
 groq_api_key = os.getenv("GROQ_API_KEY")
+langsmith_api_key = os.getenv("LANGSMITH_API_KEY")
+
+# Validate required Groq API key
+if not groq_api_key:
+    raise ValueError("GROQ_API_KEY environment variable is required")
+
+# LangSmith configuration (optional)
+if langsmith_api_key:
+    os.environ["LANGSMITH_TRACING"] = "true"
+    os.environ["LANGSMITH_ENDPOINT"] = "https://api.smith.langchain.com"
+    os.environ["LANGSMITH_API_KEY"] = langsmith_api_key
+    os.environ["LANGSMITH_PROJECT"] = "DAU Chatbot"
+    print("LangSmith tracing enabled")
+else:
+    print("LangSmith tracing disabled (no API key provided)")
 
 # Initialize FastAPI app
 app = FastAPI(title="Talk2DAU API", description="AI-powered chatbot for DA-IICT queries")
 
 # Configure CORS middleware for Next.js integration
+# Get allowed origins from environment variable or use defaults
+allowed_origins = os.getenv("ALLOWED_ORIGINS", 
+    "http://localhost:3000,http://127.0.0.1:3000,https://talk2-dau.vercel.app"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://talk2-dau.vercel.app/",  # Replace with your production domain
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -64,10 +76,11 @@ embeddings = None
 docs = None
 final_documents = None
 
-# Initialize LLM
+# Initialize Groq LLM with LangChain
 llm = ChatGroq(
     groq_api_key=groq_api_key,
-    model_name="llama3-70b-8192"
+    model_name="llama3-70b-8192",
+    temperature=0
 )
 
 # Prompt template
@@ -156,7 +169,7 @@ async def ask_question(request: QuestionRequest):
         )
     
     try:
-        # Create retrieval chain
+        # Create LangChain retrieval chain with Groq LLM
         document_chain = create_stuff_documents_chain(llm, prompt)
         retriever = vectors.as_retriever(search_kwargs={"k": 10})
         retrieval_chain = create_retrieval_chain(retriever, document_chain)
@@ -207,4 +220,6 @@ async def get_status():
 # Run the server
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Use environment variable for port (Render assigns dynamic ports)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
